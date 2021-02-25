@@ -1,6 +1,7 @@
 import os
 import csv
 import re
+import numpy as np
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
@@ -49,6 +50,7 @@ def preprocessing(src_top_dir, dist_top_dir):
     '''
     stop_words = set(stopwords.words('english'))
     wnl = WordNetLemmatizer()
+    word_count = []
 
     for dir in os.listdir(src_top_dir):
         dir_path = os.path.join(src_top_dir, dir)
@@ -61,24 +63,27 @@ def preprocessing(src_top_dir, dist_top_dir):
                     passage_list += row
                 passage = ' '.join(passage_list)
 
-                # TODO:preprocess texts
+                # preprocessing
                 passage_clean = text_cleaner(passage)
                 tokens = word_tokenize(passage_clean)
                 filtered_sentence = [w for w in tokens if not w in stop_words]
                 lem_sentence = [wnl.lemmatize(w) for w in filtered_sentence]
-                print(len(lem_sentence))
-                # dist_passage = ' '.join(lem_sentence)
-
-            # dist_dir = os.path.join(dist_top_dir, dir)
-            # if not os.path.exists(dist_dir):
-            #     os.makedirs(dist_dir)
-            # with open(os.path.join(dist_dir, file[:-4] + '.txt'), 'w') as txtFile:
-            #     txtFile.write(passage)
-            #     txtFile.close()
-            # csvFile.close()
+                word_count.append(len(lem_sentence))
+                dist_passage = ' '.join(lem_sentence)
+            # write into .txt files
+            dist_dir = os.path.join(dist_top_dir, dir)
+            if not os.path.exists(dist_dir):
+                os.makedirs(dist_dir)
+            with open(os.path.join(dist_dir, file[:-4] + '.txt'), 'w') as txtFile:
+                txtFile.write(dist_passage)
+                txtFile.close()
+            csvFile.close()
+    # word count statistic features
+    print('min:' + str(min(np.array(word_count))))
+    print('max:' + str(max(np.array(word_count))))
+    print('mean:' + str(np.mean(np.array(word_count))))
 
 
 if __name__ == '__main__':
     preprocessing('./passages', './passages_processed')
 
-# TODO：analyse statistic characteristics
