@@ -1,7 +1,9 @@
+# coding=gbk
 import os
 import csv
 import re
 import numpy as np
+import pandas as pd
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
@@ -22,7 +24,7 @@ directories = os.listdir(path)
 #             stu_num = filename[:9] + '.csv'
 #             os.rename(os.path.join(full_dir,filename),os.path.join(full_dir,stu_num))
 
-def text_cleaner(text):
+def Text_cleaner(text):
     rules = [
         {r'>\s+': u'>'},  # remove spaces after a tag opens or closes
         {r'\s+': u' '},  # replace consecutive spaces
@@ -43,7 +45,7 @@ def text_cleaner(text):
     return text.lower()
 
 
-def preprocessing(src_top_dir, dist_top_dir):
+def Preprocessing(src_top_dir, dist_top_dir):
     '''
     :param top_dir: The directory of texts. in this project, it is './passage'
     :return:
@@ -64,9 +66,10 @@ def preprocessing(src_top_dir, dist_top_dir):
                 passage = ' '.join(passage_list)
 
                 # preprocessing
-                passage_clean = text_cleaner(passage)
+                passage_clean = Text_cleaner(passage)
                 tokens = word_tokenize(passage_clean)
                 filtered_sentence = [w for w in tokens if not w in stop_words]
+                # TODO:lemmatization效果不好，可能需要进行词性标注
                 lem_sentence = [wnl.lemmatize(w) for w in filtered_sentence]
                 word_count.append(len(lem_sentence))
                 dist_passage = ' '.join(lem_sentence)
@@ -83,7 +86,30 @@ def preprocessing(src_top_dir, dist_top_dir):
     print('max:' + str(max(np.array(word_count))))
     print('mean:' + str(np.mean(np.array(word_count))))
 
+def Merge():
+    stud_mental = pd.read_csv('./features_of_student.csv', encoding='gbk')
+    stud_mental[['学号']] = stud_mental[['学号']].astype(int).astype(str)
+
+    text_folder = './text_docs/'
+    files = os.listdir(text_folder)
+    texts = []
+    student_numbers = []
+    for file in files:
+        file_path = os.path.join(text_folder, file)
+        f = open(file_path)
+        text = f.readline()
+        student_numbers.append(file[:-4])
+        texts.append(text)
+    text_dict = {'学号': student_numbers,
+                 'text': texts}
+    text_pd = pd.DataFrame(text_dict)
+
+    # merge two dataframes
+    # 合并后只剩18级，因为17级没有心理数据
+    data = pd.merge(stud_mental, text_pd)
+    data.to_csv('student_data.csv', index=False)
 
 if __name__ == '__main__':
-    preprocessing('./passages', './passages_processed')
+    # preprocessing('./passages', './passages_processed')
+    Merge()
 
