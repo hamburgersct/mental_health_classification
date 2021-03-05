@@ -109,7 +109,16 @@ def Merge():
     data = pd.merge(stud_mental, text_pd)
     data.to_csv('student_data.csv', index=False)
 
+def Split(sample_frac):
+    data = pd.read_csv('./student_data.csv', encoding='utf-8')
+    train_set = data.sample(frac=sample_frac, replace=False, random_state=1)
+    test_set = data[~data.index.isin(train_set.index)]
+    folder = './frac=' + str(sample_frac)
+    os.mkdir(folder)
+    # train_set.to_csv(folder + 'training_set_' + str(sample_frac) + '.csv', index=False)
+    # test_set.to_csv(folder + 'testing_set_' + str(sample_frac) + '.csv', index=False)
+
 if __name__ == '__main__':
     # preprocessing('./passages', './passages_processed')
-    Merge()
-
+    # Merge()
+    Split(0.8)
