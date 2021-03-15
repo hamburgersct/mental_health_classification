@@ -13,3 +13,13 @@ def TFIDF(X_train, X_test, MAX_NB_WORDS=75000):
     return (X_train, X_test)
 
 
+if __name__ == '__main__':
+    train_pd = pd.read_csv('./frac=0.8/training_set_0.8.csv')
+    test_pd = pd.read_csv('./frac=0.8/testing_set_0.8.csv')
+
+    X_train = train_pd['text'].tolist()
+    X_test = test_pd['text'].tolist()
+
+    tfidf_train, tfidf_test = TFIDF(X_train, X_test)
+
+    print(tfidf_train)
