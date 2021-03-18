@@ -40,7 +40,10 @@ def standard_svm():
 
     print(metrics.classification_report(y_test, predicted))
     print(metrics.confusion_matrix(y_test, predicted))
-    print(metrics.f1_score(y_test, predicted, average='weighted'))
+    print("precision: ", str(metrics.precision_score(y_test, predicted, average='weighted')))
+    print("accuracy: ", str(metrics.accuracy_score(y_test, predicted)))
+    print("F1 score: ", str(metrics.f1_score(y_test, predicted, average='weighted')))
+    print("recall: ", str(metrics.recall_score(y_test, predicted, average='weighted')))
 
 
 # Create Function Transformer to use Feature Union
@@ -92,10 +95,12 @@ def metadata_svm_fu():
 
     print(metrics.classification_report(y_test, predicted))
     print(metrics.confusion_matrix(y_test, predicted))
+    print("precision: ", str(metrics.precision_score(y_test, predicted, average='weighted')))
+    print("accuracy: ", str(metrics.accuracy_score(y_test, predicted)))
     print("F1 score: ", str(metrics.f1_score(y_test, predicted, average='weighted')))
+    print("recall: ", str(metrics.recall_score(y_test, predicted, average='weighted')))
 
 
 if __name__ == '__main__':
-    # metadata_svm_fu()
+    metadata_svm_fu()
     # standard_svm()
-    oversamp_svm_fu()
