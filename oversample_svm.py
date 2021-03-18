@@ -6,10 +6,10 @@ from imblearn.pipeline import Pipeline
 from sklearn.linear_model import SGDClassifier
 from sklearn.pipeline import FeatureUnion
 from sklearn import metrics
-from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer, TfidfVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
-from sklearn.decomposition import PCA
 from sklearn.preprocessing import FunctionTransformer, LabelEncoder
+from sklearn.decomposition import TruncatedSVD
 
 
 # Create Function Transformer to use Feature Union
@@ -21,6 +21,8 @@ def get_text_data(x):
 
 # Apply SMOTE to oversample training set
 def oversamp_svm_fu():
+    N_FEATURES_OPTIONS = [2, 4, 8]
+
     text_train = pd.read_csv('./frac=0.8/training_set_0.8.csv')
     text_test = pd.read_csv('./frac=0.8/testing_set_0.8.csv')
 
@@ -50,12 +52,16 @@ def oversamp_svm_fu():
             ]))
         ])),
         ('oversample', SMOTE(random_state=11)),
+        # ('reduce_dim', TruncatedSVD()),
         ('clf', SGDClassifier())
     ])
 
     # Grid Search Parameters for SGDClassifer
     parameters = {
-        'clf__alpha': (1e-4, 1e-6)
+        'clf__alpha': (1e-4, 1e-6),
+        'metadata__text_features__vec__ngram_range': [(1, 2), (1, 3)],
+        'metadata__text_features__vec__use_idf': [True, False],
+        # 'reduce_dim__n_components': N_FEATURES_OPTIONS,
     }
 
     # Training config
