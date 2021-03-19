@@ -6,25 +6,32 @@ from sklearn.linear_model import SGDClassifier
 from sklearn.pipeline import Pipeline, FeatureUnion
 from sklearn import metrics
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer, TfidfVectorizer
-from sklearn.model_selection import GridSearchCV, StratifiedKFold
-from sklearn.decomposition import PCA
+from sklearn.model_selection import GridSearchCV, StratifiedKFold, train_test_split
 from sklearn.preprocessing import FunctionTransformer
 
-def standard_svm():
-    text_train = pd.read_csv('./frac=0.8/training_set_0.8.csv')
-    text_test = pd.read_csv('./frac=0.8/testing_set_0.8.csv')
+columns = ['学号', '性别', '生源地', '总分', '幻觉、妄想症状', '自杀意图', '焦虑指标总分', '抑郁指标总分', '偏执指标总分', '自卑指标总分',
+           '敏感指标总分', '社交恐惧指标总分', '躯体化指标总分', '依赖指标总分', '敌对攻击指标总分', '冲动指标总分', '强迫指标总分',
+           '网络成瘾指标总分', '自伤行为指标总分', '进食问题指标总分', '睡眠困扰指标总分', '学校适应困难指标总分', '人际关系困扰指标总分',
+           '学业压力指标总分', '就业压力指标总分', '恋爱困扰指标总分']
 
-    X_train = text_train['text'].tolist()
-    X_test = text_test['text'].tolist()
-    y_train = text_train['可能问题'].tolist()
-    y_test = text_test['可能问题'].tolist()
+
+def standard_svm():
+    data = pd.read_csv('student_data.csv')
+    data.drop(columns=columns, inplace=True)
+
+    train_df, test_df = train_test_split(data, test_size=0.2, random_state=11)
+
+    X_train = train_df['text'].tolist()
+    X_test = test_df['text'].tolist()
+    y_train = train_df['可能问题'].tolist()
+    y_test = test_df['可能问题'].tolist()
 
     pipeline = Pipeline([('vect', CountVectorizer()),
                          ('tfidf', TfidfTransformer()),
                          ('clf', SGDClassifier()),
                          ])
     parameters = {
-        'vect__ngram_range': [(1,2), (1,3)],
+        'vect__ngram_range': [(1, 2), (1, 3)],
         'clf__alpha': (1e-4, 1e-6)
     }
 
@@ -48,19 +55,26 @@ def standard_svm():
 
 # Create Function Transformer to use Feature Union
 def get_numeric_data(x):
-    return np.array(x.iloc[:, 26:-2])
+    return np.array(x.iloc[:, 0:-2])
+
 
 def get_text_data(x):
     return x['text'].tolist()
 
+
 def metadata_svm_fu():
-    text_train = pd.read_csv('./frac=0.8/training_set_0.8.csv')
-    text_test = pd.read_csv('./frac=0.8/testing_set_0.8.csv')
+    # train_df = pd.read_csv('./frac=0.8/training_set_0.8.csv')
+    # test_df = pd.read_csv('./frac=0.8/testing_set_0.8.csv')
 
-    y_train = text_train['可能问题'].tolist()
-    y_test = text_test['可能问题'].tolist()
+    data = pd.read_csv('student_data.csv', encoding='utf-8')
+    data.drop(columns=columns, inplace=True)
 
-    transformer_numberic = FunctionTransformer(get_numeric_data)
+    train_df, test_df = train_test_split(data, test_size=0.2, random_state=8)
+
+    y_train = train_df['可能问题'].tolist()
+    y_test = test_df['可能问题'].tolist()
+
+    transformer_numeric = FunctionTransformer(get_numeric_data)
     transformer_text = FunctionTransformer(get_text_data)
 
     # Create a pipeline to concatenate Tfidf Vector and Numeric data
@@ -68,11 +82,11 @@ def metadata_svm_fu():
     pipeline = Pipeline([
         ('metadata', FeatureUnion([
             ('numeric_feature', Pipeline([
-                ('selector', transformer_numberic)
+                ('selector', transformer_numeric)
             ])),
             ('text_features', Pipeline([
                 ('selector', transformer_text),
-                ('vec', TfidfVectorizer(ngram_range=(1,3)))
+                ('vec', TfidfVectorizer())
             ]))
         ])),
         ('clf', SGDClassifier())
@@ -81,7 +95,7 @@ def metadata_svm_fu():
     # Grid Search Parameters for SGDClassifer
     parameters = {
         'clf__alpha': (1e-4, 1e-6),
-        'metadata__text_features__vec__ngram_range': [(1,2), (1,3)],
+        'metadata__text_features__vec__ngram_range': [(1, 2), (1, 3)],
         'metadata__text_features__vec__use_idf': [True, False]
     }
 
@@ -91,9 +105,9 @@ def metadata_svm_fu():
     refit = 'F1'
 
     gs_clf = GridSearchCV(pipeline, parameters, n_jobs=1, verbose=1, cv=kfold, scoring=scoring, refit=refit)
-    gs_clf.fit(text_train, y_train)
+    gs_clf.fit(train_df, y_train)
 
-    predicted = gs_clf.predict(text_test)
+    predicted = gs_clf.predict(test_df)
 
     print(metrics.classification_report(y_test, predicted))
     print(metrics.confusion_matrix(y_test, predicted))
