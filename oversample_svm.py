@@ -56,7 +56,7 @@ def oversamp_svm_fu():
                 ('vec', TfidfVectorizer(ngram_range=(1, 3)))
             ]))
         ])),
-        ('oversample', SMOTE(random_state=11)),
+        # ('oversample', SMOTE(random_state=11)),
         # ('reduce_dim', TruncatedSVD()),
         ('clf', SGDClassifier())
     ])
@@ -64,6 +64,7 @@ def oversamp_svm_fu():
     # Grid Search Parameters for SGDClassifer
     parameters = {
         'clf__alpha': (1e-4, 1e-6),
+        # 'clf__class_weight':('balanced', None),
         'metadata__text_features__vec__ngram_range': [(1, 2), (1, 3)],
         'metadata__text_features__vec__use_idf': [True, False],
         # 'reduce_dim__n_components': N_FEATURES_OPTIONS,
